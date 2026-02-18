@@ -35,6 +35,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('app:listInstalledFonts', args),
   undo: () => ipcRenderer.invoke('app:undo'),
   redo: () => ipcRenderer.invoke('app:redo'),
+  paste: () => ipcRenderer.invoke('app:paste'),
   // Updater
   checkForUpdates: () => ipcRenderer.invoke('update:check'),
   downloadUpdate: () => ipcRenderer.invoke('update:download'),
@@ -653,6 +654,7 @@ export interface ElectronAPI {
   listInstalledFonts: (args?: {
     refresh?: boolean;
   }) => Promise<{ success: boolean; fonts?: string[]; cached?: boolean; error?: string }>;
+  paste: () => Promise<{ success: boolean; error?: string }>;
   // Updater
   checkForUpdates: () => Promise<{ success: boolean; result?: any; error?: string }>;
   downloadUpdate: () => Promise<{ success: boolean; error?: string }>;

@@ -45,6 +45,7 @@ declare global {
       }) => Promise<{ success: boolean; fonts?: string[]; cached?: boolean; error?: string }>;
       undo: () => Promise<{ success: boolean; error?: string }>;
       redo: () => Promise<{ success: boolean; error?: string }>;
+      paste: () => Promise<{ success: boolean; error?: string }>;
       // Updater
       checkForUpdates: () => Promise<{ success: boolean; result?: any; error?: string }>;
       downloadUpdate: () => Promise<{ success: boolean; error?: string }>;
@@ -1268,6 +1269,7 @@ export interface ElectronAPI {
   }) => Promise<{ success: boolean; fonts?: string[]; cached?: boolean; error?: string }>;
   undo: () => Promise<{ success: boolean; error?: string }>;
   redo: () => Promise<{ success: boolean; error?: string }>;
+  paste: () => Promise<{ success: boolean; error?: string }>;
   // Updater
   checkForUpdates: () => Promise<{ success: boolean; result?: any; error?: string }>;
   downloadUpdate: () => Promise<{ success: boolean; error?: string }>;

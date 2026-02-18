@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   CTRL_J_ASCII,
+  isLinuxPlatform,
+  shouldHandleLinuxCtrlShiftPaste,
   shouldMapShiftEnterToCtrlJ,
   type KeyEventLike,
 } from '../../renderer/terminal/terminalKeybindings';
@@ -28,5 +30,25 @@ describe('TerminalSessionManager - Shift+Enter to Ctrl+J mapping', () => {
 
   it('uses line feed for Ctrl+J', () => {
     expect(CTRL_J_ASCII).toBe('\n');
+  });
+
+  it('detects Linux platform names', () => {
+    expect(isLinuxPlatform('Linux x86_64')).toBe(true);
+    expect(isLinuxPlatform('linux')).toBe(true);
+    expect(isLinuxPlatform('MacIntel')).toBe(false);
+    expect(isLinuxPlatform('Win32')).toBe(false);
+  });
+
+  it('matches Linux Ctrl+Shift+V paste shortcut only', () => {
+    const event = makeEvent({ key: 'V', shiftKey: true, ctrlKey: true });
+
+    expect(shouldHandleLinuxCtrlShiftPaste(event, 'Linux')).toBe(true);
+    expect(shouldHandleLinuxCtrlShiftPaste({ ...event, key: 'v' }, 'Linux')).toBe(true);
+    expect(shouldHandleLinuxCtrlShiftPaste({ ...event, shiftKey: false }, 'Linux')).toBe(false);
+    expect(shouldHandleLinuxCtrlShiftPaste({ ...event, ctrlKey: false }, 'Linux')).toBe(false);
+    expect(shouldHandleLinuxCtrlShiftPaste({ ...event, altKey: true }, 'Linux')).toBe(false);
+    expect(shouldHandleLinuxCtrlShiftPaste({ ...event, metaKey: true }, 'Linux')).toBe(false);
+    expect(shouldHandleLinuxCtrlShiftPaste({ ...event, type: 'keyup' }, 'Linux')).toBe(false);
+    expect(shouldHandleLinuxCtrlShiftPaste(event, 'MacIntel')).toBe(false);
   });
 });

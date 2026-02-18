@@ -9,7 +9,12 @@ import { log } from '../lib/logger';
 import { TERMINAL_SNAPSHOT_VERSION, type TerminalSnapshotPayload } from '#types/terminalSnapshot';
 import { pendingInjectionManager } from '../lib/PendingInjectionManager';
 import { getProvider, type ProviderId } from '@shared/providers/registry';
-import { CTRL_J_ASCII, shouldMapShiftEnterToCtrlJ } from './terminalKeybindings';
+import {
+  CTRL_J_ASCII,
+  isLinuxPlatform,
+  shouldHandleLinuxCtrlShiftPaste,
+  shouldMapShiftEnterToCtrlJ,
+} from './terminalKeybindings';
 
 const SNAPSHOT_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes
 const MAX_DATA_WINDOW_BYTES = 128 * 1024 * 1024; // 128 MB soft guardrail
@@ -163,10 +168,27 @@ export class TerminalSessionManager {
 
     this.applyTheme(options.theme);
 
-    // Map Shift+Enter to Ctrl+J for CLI agents only
-    if (options.mapShiftEnterToCtrlJ) {
+    const platform =
+      typeof navigator !== 'undefined'
+        ? (navigator as Navigator & { userAgentData?: { platform?: string } }).userAgentData
+            ?.platform || navigator.platform
+        : '';
+    const shouldHandleLinuxPasteShortcut = isLinuxPlatform(platform);
+
+    // Add explicit Linux terminal paste support, and optionally map Shift+Enter to Ctrl+J.
+    if (options.mapShiftEnterToCtrlJ || shouldHandleLinuxPasteShortcut) {
       this.terminal.attachCustomKeyEventHandler((event: KeyboardEvent) => {
-        if (shouldMapShiftEnterToCtrlJ(event)) {
+        if (shouldHandleLinuxCtrlShiftPaste(event, platform)) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          event.stopPropagation();
+          void window.electronAPI.paste().catch((error) => {
+            log.warn('Terminal Linux paste shortcut failed', { id: this.id, error });
+          });
+          return false;
+        }
+
+        if (options.mapShiftEnterToCtrlJ && shouldMapShiftEnterToCtrlJ(event)) {
           event.preventDefault();
           event.stopImmediatePropagation();
           event.stopPropagation();

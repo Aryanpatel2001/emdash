@@ -181,6 +181,15 @@ export function registerAppIpc() {
     }
   });
 
+  ipcMain.handle('app:paste', async (event) => {
+    try {
+      event.sender.paste();
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : String(error) };
+    }
+  });
+
   ipcMain.handle('app:openExternal', async (_event, url: string) => {
     try {
       if (!url || typeof url !== 'string') throw new Error('Invalid URL');
